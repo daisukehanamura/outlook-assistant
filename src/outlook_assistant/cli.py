@@ -13,9 +13,11 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from .adapters.base import Person
 from .calendar_hold import find_common_slots, hold, invite, suggest_slots
+from .style_profile import build_profile
 
 _DATETIME_HINT = "YYYY-MM-DD HH:MM"
 
@@ -34,6 +36,12 @@ def _calendar():
     from .adapters.com_outlook import ComOutlookCalendar
 
     return ComOutlookCalendar()
+
+
+def _mail():
+    from .adapters.com_outlook import ComOutlookMail
+
+    return ComOutlookMail()
 
 
 def _cmd_hold(args: argparse.Namespace) -> int:
@@ -113,6 +121,28 @@ def _cmd_slots(args: argparse.Namespace) -> int:
     return 0 if slots else 1
 
 
+def _cmd_style(args: argparse.Namespace) -> int:
+    mails = _mail().recent_sent(limit=args.limit)
+    if not mails:
+        print("送信済みメールが見つかりませんでした")
+        return 1
+
+    profile = build_profile(mails)
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(profile.to_markdown(), encoding="utf-8")
+
+    print(f"文体プロファイルを作成しました: {output}")
+    print(f"  参照した送信メール: {profile.sample_count} 通")
+    if profile.greetings:
+        print(f"  よく使う書き出し  : 「{profile.greetings[0][0]}」")
+    if profile.closings:
+        print(f"  よく使う結び      : 「{profile.closings[0][0]}」")
+    print()
+    print("※ 業務情報を含むため、このファイルはコミットしないこと（.gitignore 済み）")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="outlook_assistant",
@@ -132,6 +162,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_invite = sub.add_parser("invite", help="仮予定を出席者への招待として送信する")
     p_invite.add_argument("--id", required=True, help="hold が表示した予定ID")
     p_invite.set_defaults(func=_cmd_invite)
+
+    p_style = sub.add_parser(
+        "style", help="送信済みメールから文体プロファイルを作る"
+    )
+    p_style.add_argument("--limit", type=int, default=20, help="参照する送信メールの件数")
+    p_style.add_argument(
+        "--output",
+        default="data/style_profile.md",
+        help="出力先。業務情報を含むため .gitignore の対象に置くこと",
+    )
+    p_style.set_defaults(func=_cmd_style)
 
     p_slots = sub.add_parser(
         "slots", help="空き枠を探す。--attendee を付けると全員が空いている枠に絞る"

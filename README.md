@@ -19,6 +19,9 @@ python -m outlook_assistant hold --subject "定例の相談" --start "2026-08-19
 
 # 3. 内容を確認したうえで、出席者へ招待を送る（翌日でもよい）
 python -m outlook_assistant invite --id <予定ID>
+
+# 文体プロファイルを作る（メール下書きの前に一度実行しておく）
+python -m outlook_assistant style --limit 20
 ```
 
 日時の自然言語解釈（「来週の水曜あたり」等）はAIエージェント側が担当し、
