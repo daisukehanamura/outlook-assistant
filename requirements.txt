@@ -1,0 +1,6 @@
+# Outlook COM自動化（Windows専用）
+# 環境マーカーにより、開発機のMacでは skip される
+pywin32>=306; sys_platform == "win32"
+
+# 日時の自然言語解釈・タイムゾーン処理
+python-dateutil>=2.9.0

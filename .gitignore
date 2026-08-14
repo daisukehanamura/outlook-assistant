@@ -1,0 +1,37 @@
+# ==========================================================
+# 業務データは絶対にコミットしない
+# 抽出した過去メール本文・連絡先・予定情報はすべてローカル限り
+# ==========================================================
+data/
+samples/*
+!samples/.gitkeep
+!samples/*.example.*
+contacts.yaml
+contacts.yml
+style_profile.md
+*.eml
+*.msg
+*.ics
+*.pst
+*.ost
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ローカル設定（社内固有の値が入る）
+config.local.toml
+.env
