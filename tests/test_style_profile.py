@@ -8,7 +8,7 @@ from datetime import datetime
 from outlook_assistant.adapters.base import Person, SentMail
 from outlook_assistant.style_profile import build_profile, find_signature, strip_quoted
 
-SIGNATURE = "----------------\n花村 大輔\n開発本部"
+SIGNATURE = "----------------\n例田 太郎\nサンプル部"
 
 
 def mail(body: str, subject: str = "件名") -> SentMail:
@@ -53,14 +53,14 @@ class SignatureTest(unittest.TestCase):
 class BuildProfileTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mails = [
-            mail(f"お疲れ様です。花村です。\n\n件名の件、承知しました。\n\nよろしくお願いいたします。\n{SIGNATURE}"),
-            mail(f"お疲れ様です。花村です。\n\n資料を送付します。\n\nよろしくお願いいたします。\n{SIGNATURE}"),
-            mail(f"お疲れ様です。花村です。\n\n恐れ入りますが、ご確認をお願いいたします。\n\n何卒よろしくお願いいたします。\n{SIGNATURE}"),
+            mail(f"お疲れ様です。例田です。\n\n件名の件、承知しました。\n\nよろしくお願いいたします。\n{SIGNATURE}"),
+            mail(f"お疲れ様です。例田です。\n\n資料を送付します。\n\nよろしくお願いいたします。\n{SIGNATURE}"),
+            mail(f"お疲れ様です。例田です。\n\n恐れ入りますが、ご確認をお願いいたします。\n\n何卒よろしくお願いいたします。\n{SIGNATURE}"),
         ]
 
     def test_よく使う書き出しを抽出する(self) -> None:
         profile = build_profile(self.mails)
-        self.assertEqual(profile.greetings[0], ("お疲れ様です。花村です。", 3))
+        self.assertEqual(profile.greetings[0], ("お疲れ様です。例田です。", 3))
 
     def test_よく使う結びを抽出する(self) -> None:
         profile = build_profile(self.mails)
@@ -72,7 +72,7 @@ class BuildProfileTest(unittest.TestCase):
         profile = build_profile(self.mails)
         self.assertEqual(profile.signature, SIGNATURE)
         collected = [text for text, _ in profile.greetings + profile.closings]
-        self.assertNotIn("開発本部", collected)
+        self.assertNotIn("サンプル部", collected)
 
     def test_段落を空行で区切る癖を検出する(self) -> None:
         profile = build_profile(self.mails)
@@ -89,7 +89,7 @@ class BuildProfileTest(unittest.TestCase):
     def test_Markdownに出力できる(self) -> None:
         markdown = build_profile(self.mails).to_markdown()
         self.assertIn("# 文体プロファイル", markdown)
-        self.assertIn("お疲れ様です。花村です。", markdown)
+        self.assertIn("お疲れ様です。例田です。", markdown)
         self.assertIn("## 署名", markdown)
 
 
