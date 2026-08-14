@@ -75,6 +75,26 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## テスト
+
+Outlook に依存しない部分は Mac でも検証できる。
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -t tests
+```
+
+## このリポジトリで Python を学ぶ
+
+実際のコードを教材にした読み解きガイドと演習を置いてある。
+
+| | 内容 |
+|---|---|
+| [docs/python-learning.md](docs/python-learning.md) | 本編。文法と設計を12章で読み解く |
+| [docs/python-execution.md](docs/python-execution.md) | `python -m` の仕組み、`sys.path`、コンパイルと `__pycache__` |
+| [docs/python-for-java-developers.md](docs/python-for-java-developers.md) | Java との文法対比。private / interface / 例外 / ビルド |
+| [docs/vscode-code-reading.md](docs/vscode-code-reading.md) | VS Code で実装や呼び出し元を辿る操作 |
+| [exercises/](exercises/) | 手を動かす課題。失敗するテストを緑にしていく形式 |
+
 ## ステータス
 
 要件定義中。`docs/decisions.md` に確定事項と保留事項を記録している。
