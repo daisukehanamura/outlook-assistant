@@ -95,6 +95,17 @@ class CalendarPort(ABC):
     ) -> list[tuple[datetime, datetime]]:
         """指定期間から、自分の空き時間を返す。"""
 
+    @abstractmethod
+    def busy_spans(
+        self, person: Person, start: datetime, end: datetime
+    ) -> list[tuple[datetime, datetime]]:
+        """指定した相手の、予定が埋まっている時間帯を返す。
+
+        参照できるのは自分に見えている範囲だけ。相手が空き時間情報を
+        公開していない場合は空リストが返り、「終日空き」と区別できない。
+        呼び出し側はこの曖昧さを利用者に伝えること。
+        """
+
 
 class MailPort(ABC):
     """メール操作。送信機能は意図的に定義しない。"""

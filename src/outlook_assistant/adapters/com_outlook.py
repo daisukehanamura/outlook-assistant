@@ -12,8 +12,9 @@ Outlookが起動しているWindows上でのみ動く。認証やアプリ登録
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
+from ..scheduling import free_gaps, parse_free_busy
 from .base import (
     Appointment,
     Busy,
@@ -38,6 +39,9 @@ _BUSY_STATUS = {Busy.FREE: 0, Busy.TENTATIVE: 1, Busy.BUSY: 2}
 # Outlookの Restrict/Find に渡す日時書式。
 # Outlook側のロケール設定に依存するため、社用PCで最初に検証すべき箇所。
 _FILTER_FORMAT = "%m/%d/%Y %H:%M"
+
+# 空き時間照会の粒度（分）。Outlookのスケジュールアシスタントと揃えて30分。
+FREE_BUSY_INTERVAL_MINUTES = 30
 
 
 def _connect():
@@ -106,27 +110,39 @@ class ComOutlookCalendar(CalendarPort):
             f"AND [End] > '{start.strftime(_FILTER_FORMAT)}'"
         )
 
-        busy: list[tuple[datetime, datetime]] = sorted(
+        busy = [
             (
-                (
-                    datetime.fromtimestamp(item.Start.timestamp()),
-                    datetime.fromtimestamp(item.End.timestamp()),
-                )
-                for item in restricted
-            ),
-            key=lambda span: span[0],
-        )
+                datetime.fromtimestamp(item.Start.timestamp()),
+                datetime.fromtimestamp(item.End.timestamp()),
+            )
+            for item in restricted
+        ]
+        return free_gaps(busy, start, end, duration_minutes)
 
-        slots: list[tuple[datetime, datetime]] = []
-        cursor = start
-        need = timedelta(minutes=duration_minutes)
-        for busy_start, busy_end in busy:
-            if busy_start - cursor >= need:
-                slots.append((cursor, busy_start))
-            cursor = max(cursor, busy_end)
-        if end - cursor >= need:
-            slots.append((cursor, end))
-        return slots
+    def busy_spans(
+        self, person: Person, start: datetime, end: datetime
+    ) -> list[tuple[datetime, datetime]]:
+        """相手の空き時間情報を照会する。
+
+        Recipient.FreeBusy はOutlookのスケジュールアシスタントと同じ経路なので、
+        追加の権限申請もアプリ登録も要らない。逆に言えば、あの画面で相手の
+        予定が見えない相手はここでも見えない。
+
+        戻り値は指定日の午前0時起点で最大30日分。呼び出し側で期間を切ること。
+        """
+        _, ns = _connect()
+        recipient = ns.CreateRecipient(person.address or person.name)
+        if not recipient.Resolve():
+            raise ValueError(f"宛先を解決できませんでした: {person.name}")
+
+        # 第3引数 True で詳細形式（仮の予定・外出中を区別できる）
+        pattern = recipient.FreeBusy(start, FREE_BUSY_INTERVAL_MINUTES, True)
+        spans = parse_free_busy(pattern, start, FREE_BUSY_INTERVAL_MINUTES)
+        return [
+            (span_start, span_end)
+            for span_start, span_end in spans
+            if span_end > start and span_start < end
+        ]
 
 
 class ComOutlookMail(MailPort):
